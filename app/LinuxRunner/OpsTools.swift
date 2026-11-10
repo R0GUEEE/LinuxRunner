@@ -557,7 +557,7 @@ struct StartupCommandSection: View {
     }
 
     private func load() {
-        boot = (prefs.bootCommand as? [String] ?? []).joined(separator: " ")
-        launch = (prefs.launchCommand as? [String] ?? []).joined(separator: " ")
+        boot = prefs.bootCommand.joined(separator: " ")
+        launch = prefs.launchCommand.joined(separator: " ")
     }
 }

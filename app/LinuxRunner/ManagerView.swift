@@ -1492,14 +1492,27 @@ struct StorageManagementView: View {
     @State private var usage: [String: Int64] = [:]
     @State private var free: Int64?
     @State private var cleaning = false
+    @State private var cleaningDownloads = false
     var body: some View {
         List {
             Section("Persistent storage") { ForEach(usage.keys.sorted(), id: \.self) { key in HStack { Text(key); Spacer(); Text(ByteCountFormatter.string(fromByteCount: usage[key] ?? 0, countStyle: .file)) } } }
             Section { if let free { Text("Host available: \(ByteCountFormatter.string(fromByteCount: free, countStyle: .file))") }
                 Button("Clean Temporary Files") { cleaning = true }
+                Button("Remove Downloaded Installer Packages") { cleaningDownloads = true }
                 Text("Removes only LinuxRunner's inactive installation staging files. User files, environments, packages and browser profiles are preserved.").font(.caption)
+                Text("Downloaded installer packages are the distribution archives cached while installing; they are re-downloaded if you install again.").font(.caption)
             }
         }.navigationTitle("Storage").onAppear(perform: measure)
+        .confirmationDialog("Remove cached installer packages?", isPresented: $cleaningDownloads) {
+            Button("Remove Downloaded Packages", role: .destructive) {
+                // An install in progress owns this directory.
+                if !UserDefaults.standard.bool(forKey: "InstallerActive") {
+                    try? FileManager.default.removeItem(at: LRRuntimeBridge.managedStorageURL().appendingPathComponent("downloads"))
+                }
+                measure()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         .confirmationDialog("Remove inactive temporary installation files?", isPresented: $cleaning) { Button("Clean Temporary Files") {
             let staging = LRRuntimeBridge.managedStorageURL().appendingPathComponent("installer-temporary")
             // Installer creates this namespace exclusively; no rootfs/exchange paths.
