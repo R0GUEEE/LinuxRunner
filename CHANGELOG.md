@@ -2,6 +2,26 @@
 
 User-visible changes follow Added / Changed / Fixed / Known Issues.
 
+## [1.1.2] — 2026-11-10 (Build 906)
+
+### Added
+
+- **System Health** (Settings › Linux Environment): runtime, backend, guest process count,
+  app memory and free storage at a glance, the largest guest processes by memory, per-environment
+  rows, recent warnings and errors, and an **inventory report** export (Markdown) covering device,
+  runtime, environments, processes and failures.
+- **Quick Commands**: saved `/bin/sh -c` one-liners seeded per package manager (update, disk,
+  memory, processes, largest directories, ports, log tail), with add/edit/delete/reorder. Each run
+  opens a terminal through the same path as the application launcher.
+- **Startup command editor** in Terminal & Keyboard for the boot command and login shell, replacing
+  the legacy storyboard field as the only way to set them.
+- Storage: **Remove Downloaded Installer Packages** reclaims the package cache the Arch installer
+  otherwise keeps forever, guarded so it never runs during an install.
+
+### Changed
+
+- Version 1.1.2 (906).
+
 ## [Unreleased] — LinuxRunner 1.1.1 fork maintenance
 
 Audit and compatibility pass on top of 1.1.1 (905). Full detail in
