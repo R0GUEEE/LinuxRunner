@@ -114,7 +114,8 @@ private final class InstallCancellation: @unchecked Sendable {
                 if token.check() { throw CancellationError() }
                 message = "Importing isolated Debian filesystem"
                 DiagnosticCenter.installer(2, message: "stage=fakefs_import root=\(root) output=\(archive.path) cancelled=\(token.check())")
-                let sha = try Self.sha256(archive)
+                // Hashing a ~100-200 MB archive on the main actor freezes the UI (and Cancel).
+                let sha = try await Task.detached(priority: .utility) { try Self.sha256(archive) }.value
                 try await Task.detached(priority: .utility) {
                     try LRRuntimeBridge.importVerifiedEnvironment(archive, root: root, sha256: sha, progress: { value, _ in Task { @MainActor in self.fraction = 0.75 + value * 0.25 } }, cancel: { token.check() })
                 }.value

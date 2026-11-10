@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		PR000002AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PR000001AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy */; };
 		1C1100000000000000000C02 /* lr_zstd_decompress.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C02; };
 		1C1100000000000000000C01 /* steamos_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C01; };
         1A13000000000000000000C1 /* CaptureCleanupUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A14000000000000000000C1; };
@@ -570,6 +571,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		PR000001AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = app/LinuxRunner/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
 		1C1200000000000000000C02 /* lr_zstd_decompress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = deps/zstd/lr_zstd_decompress.c; sourceTree = SOURCE_ROOT; };
 		1C1200000000000000000C01 /* steamos_image.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tools/steamos_image.c; sourceTree = SOURCE_ROOT; };
         1A14000000000000000000C1 /* CaptureCleanupUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = app/UITests/CaptureCleanupUITests.m; sourceTree = SOURCE_ROOT; };
@@ -2106,6 +2108,7 @@
 				FC000001AF96D90D00FFB7A4 /* FiraCodeNerdFontMono-Regular.ttf in Resources */,
 				FC000002AF96D90D00FFB7A4 /* FiraCodeNerdFontMono-Bold.ttf in Resources */,
 				FC000003AF96D90D00FFB7A4 /* FiraCodeNerdFontMono-VENDORED.txt in Resources */,
+				PR000002AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

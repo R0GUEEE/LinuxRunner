@@ -442,11 +442,16 @@ int_t sys_timer_create(dword_t clock, addr_t sigevent_addr, addr_t timer_addr) {
     if (sigev.method != SIGEV_SIGNAL_ && sigev.method != SIGEV_NONE_ && sigev.method != SIGEV_THREAD_ID_)
         return _EINVAL;
 
+    bool timer_thread_alive = true;
     if (sigev.method == SIGEV_THREAD_ID_) {
         lock(&pids_lock);
-        if (pid_get_task(sigev.tid) == NULL)
-            return _EINVAL;
+        timer_thread_alive = pid_get_task(sigev.tid) != NULL;
         unlock(&pids_lock);
+        // Never return here with pids_lock held: the guest can make this fail
+        // on purpose and every later pid lookup (fork, wait4, kill, /proc)
+        // would block forever.
+        if (!timer_thread_alive)
+            return _EINVAL;
     }
 
     struct tgroup *group = current->group;
@@ -482,7 +487,9 @@ int_t sys_timer_create(dword_t clock, addr_t sigevent_addr, addr_t timer_addr) {
         timer->thread_pid = group->leader->pid;
     } else if (sigev.method == SIGEV_THREAD_ID_) {
         timer->tgroup = group;
-        timer->thread_pid = group->leader->pid;
+        // Deliver to the thread the caller named, not to the group leader.
+        // sigev.tid was validated above, so it is a live task here.
+        timer->thread_pid = sigev.tid;
     }
     unlock(&group->lock);
     return 0;

@@ -285,7 +285,8 @@ private final class ArchCancellation: @unchecked Sendable {
                                                              progress: { value in Task { @MainActor in self.fraction = 0.6 + value * 0.2 } }, cancel: { token.check() })
                 }.value
                 message = "Importing isolated Arch Linux ARM filesystem"
-                let sha = try DebianInstaller.sha256(archive)
+                // Assembled archives reach hundreds of MB; keep the main actor free.
+                let sha = try await Task.detached(priority: .utility) { try DebianInstaller.sha256(archive) }.value
                 let metadata = ["distributionID": "arch", "distribution": "Arch Linux ARM", "version": "rolling", "packageManager": "pacman", "defaultShell": "/bin/bash"]
                 try await Task.detached(priority: .utility) {
                     try LRRuntimeBridge.importVerifiedEnvironment(archive, root: root, sha256: sha, metadata: metadata,

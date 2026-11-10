@@ -2,6 +2,43 @@
 
 User-visible changes follow Added / Changed / Fixed / Known Issues.
 
+## [Unreleased] — LinuxRunner 1.1.1 fork maintenance
+
+Audit and compatibility pass on top of 1.1.1 (905). Full detail in
+[docs/BUG-AUDIT.md](docs/BUG-AUDIT.md) and [docs/IOS27.md](docs/IOS27.md).
+
+### Fixed
+
+- Interpreter: `tmpfs` reads with the file offset past EOF copied from outside the
+  host heap; a negative `lseek(SEEK_SET)` turned a guest write into host heap
+  corruption. A failed `SIGEV_THREAD_ID` timer creation left the global pid lock
+  held, wedging `fork`/`wait4`/`kill` for the whole guest.
+- Guest path strings that fill the 4 KiB buffer without a NUL are now rejected
+  instead of being used as C strings; `readv`/`writev` reject oversized lengths and
+  vectors as Linux does.
+- Terminal: an exactly-full argument buffer wrote one byte past `argv[4096]`.
+- Clipboard: `/dev/clipboard` reported UTF-16 lengths for a UTF-8 buffer (non-ASCII
+  pastes were cut short) and writing invalid UTF-8 silently cleared the user's
+  clipboard.
+- Location: `/dev/location` could report `0,0` after a concurrent open, and
+  authorization granted after launch never started updates.
+- Audio: stopping the desktop leaked the guest sound socket and could free the ring
+  buffer under an in-flight render callback.
+- Installers: the archive SHA-256 no longer runs on the main actor, so the UI and
+  Cancel stay responsive while Debian and Arch archives are verified.
+
+### Added
+
+- `PrivacyInfo.xcprivacy` with the required-reason API declarations.
+- Documented iOS / iPadOS 27 support, including the scene life cycle requirement and
+  the external-display accessory change (`docs/IOS27.md`).
+- GitHub Actions workflow that builds an unsigned IPA on `macos-26`.
+
+### Changed
+
+- StikDebug hand-off uses `UIApplication.open` only; `canOpenURL:` is deprecated in
+  iOS 27.
+
 ## [1.1.1] — 2026-11-08 (Build 905)
 
 Full release notes: [docs/releases/v1.1.1.md](docs/releases/v1.1.1.md).

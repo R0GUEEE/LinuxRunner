@@ -1611,13 +1611,17 @@ struct ExecutionEngineView: View {
         var items = [URLQueryItem(name: "bundle-id", value: identifier), URLQueryItem(name: "pid", value: String(ProcessInfo.processInfo.processIdentifier))]
         if LRRuntimeBridge.requiresPreparedJITRegion() { items.append(URLQueryItem(name: "script-name", value: "universal")) }
         components.queryItems = items
-        guard let url = components.url, UIApplication.shared.canOpenURL(url) else {
-            message = "StikDebug is not installed or not set up. Install it, pair this device, then try again."
-            return
-        }
+        guard let url = components.url else { return }
+        // canOpenURL: is deprecated in iOS 27; attempt the open and handle the
+        // failure in the completion handler instead of validating first.
         requested = true
         LRRuntimeBridge.logCategory("JIT", event: "StikDebug attachment requested")
-        UIApplication.shared.open(url, options: [:]) { opened in if !opened { requested = false; message = "StikDebug could not be opened." } }
+        UIApplication.shared.open(url, options: [:]) { opened in
+            if !opened {
+                requested = false
+                message = "StikDebug is not installed or not set up. Install it, pair this device, then try again."
+            }
+        }
     }
 }
 

@@ -396,8 +396,12 @@ static NSMapTable<NSUUID *, Terminal *> *terminalsByUUID;
 }
 
 + (void)convertCommand:(NSArray<NSString *> *)command toArgs:(char *)argv limitSize:(size_t)maxSize {
+    if (maxSize == 0) return;
     char *p = argv;
     for (NSString *cmd in command) {
+        // No room left for another argument: stop instead of starting one
+        // that cannot be NUL terminated.
+        if (p >= argv + maxSize - 1) break;
         const char *c = cmd.UTF8String;
         // Save space for the final NUL byte in argv
         while (p < argv + maxSize - 1 && (*p++ = *c++));
@@ -405,8 +409,12 @@ static NSMapTable<NSUUID *, Terminal *> *terminalsByUUID;
         // NUL terminated
         *p = '\0';
     }
-    // Add the final NUL byte to argv
-    *++p = '\0';
+    // Add the final NUL byte to argv, but never past the end of the buffer:
+    // when the arguments fill it exactly, ++p is argv[maxSize].
+    if (p + 1 < argv + maxSize)
+        *++p = '\0';
+    else
+        *p = '\0';
 }
 
 + (Terminal *)terminalWithType:(int)type number:(int)number {

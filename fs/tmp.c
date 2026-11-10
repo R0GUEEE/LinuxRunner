@@ -391,12 +391,17 @@ static ssize_t tmpfs_read(struct fd *fd, void *buf, size_t bufsize) {
         goto out;
     assert(S_ISREG(inode->stat.mode));
 
-    if (bufsize > inode->stat.size - fd->offset) {
+    // inode->stat.size is unsigned, so `size - offset` wraps when the file
+    // offset sits past EOF (lseek past the end, or pread). Test the ordering
+    // explicitly instead of relying on the subtraction, or the wrap turns a
+    // read past EOF into a huge memcpy out of the host heap.
+    if (fd->offset >= inode->stat.size) {
+        bufsize = 0;
+    } else if (bufsize > inode->stat.size - fd->offset) {
         bufsize = inode->stat.size - fd->offset;
-        if (fd->offset >= inode->stat.size)
-            bufsize = 0;
     }
-    memcpy(buf, inode->file_data + fd->offset, bufsize);
+    if (bufsize != 0)
+        memcpy(buf, inode->file_data + fd->offset, bufsize);
     fd->offset += bufsize;
     res = bufsize;
 
@@ -414,12 +419,20 @@ static ssize_t tmpfs_write(struct fd *fd, const void *buf, size_t bufsize) {
         goto out;
     assert(S_ISREG(inode->stat.mode));
 
+    // Refuse an offset/length that overflows size_t: otherwise the sum wraps,
+    // the resize below is skipped and the memcpy writes outside file_data.
+    // A guest reaches this with lseek(fd, -1, SEEK_SET).
+    if (bufsize > (size_t) -1 - fd->offset) {
+        res = _EINVAL;
+        goto out;
+    }
     if (inode->stat.size < fd->offset + bufsize) {
         res = tmpfs_file_resize(inode, fd->offset + bufsize);
         if (res < 0)
             goto out;
     }
-    memcpy(inode->file_data + fd->offset, buf, bufsize);
+    if (bufsize != 0)
+        memcpy(inode->file_data + fd->offset, buf, bufsize);
     fd->offset += bufsize;
     res = bufsize;
 

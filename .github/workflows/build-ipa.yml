@@ -7,6 +7,10 @@ on:
         description: "Bundle identifier"
         default: "dev.linuxrunner.app"
         required: false
+      xcode_path:
+        description: "Developer dir (empty = newest Xcode on the runner)"
+        default: ""
+        required: false
       artifact_suffix:
         description: "Extra suffix for the artifact name (optional)"
         default: ""
@@ -20,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -28,8 +32,8 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 180
     env:
-      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       BUNDLE_ID: ${{ inputs.bundle_id || 'dev.linuxrunner.app' }}
+      XCODE_PATH: ${{ inputs.xcode_path }}
     steps:
       - name: Checkout with submodules
         uses: actions/checkout@v4
@@ -37,10 +41,21 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Select Xcode
+        run: |
+          # Default: the runner's selected Xcode (26.6 / iPhoneOS 26.5 today).
+          # Pass xcode_path (e.g. /Applications/Xcode_27.app/Contents/Developer)
+          # to build against a newer SDK.
+          if [ -n "$XCODE_PATH" ] && [ -d "$XCODE_PATH" ]; then
+            echo "DEVELOPER_DIR=$XCODE_PATH" >> "$GITHUB_ENV"
+          fi
+          ls -d /Applications/Xcode*.app 2>/dev/null || true
+
       - name: Toolchain report
         run: |
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphoneos --show-sdk-path
           uname -m
           sysctl -n hw.memsize hw.ncpu
           df -h /
@@ -91,3 +106,10 @@ jobs:
             build/releases/*.sha256
             build/releases/*.entitlements.plist
           if-no-files-found: error
+
+      - name: Attach IPA to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/releases/*.ipa
+          generate_release_notes: true

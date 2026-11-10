@@ -92,6 +92,7 @@ int user_read_string(addr_t addr, char *buf, size_t max) {
     // Translate once per guest page, not once per byte. Search only the mapped
     // page: a terminator at its end must not fault on the following guard page.
     size_t copied = 0;
+    bool terminated = false;
     while (copied < max) {
         if (copied > UINT64_MAX - addr) {
             read_wrunlock(&mem->lock);
@@ -109,10 +110,16 @@ int user_read_string(addr_t addr, char *buf, size_t max) {
         if (terminator) count = (size_t)(terminator - source) + 1;
         memcpy(buf + copied, source, count);
         copied += count;
-        if (terminator) break;
+        if (terminator) {
+            terminated = true;
+            break;
+        }
     }
     read_wrunlock(&mem->lock);
-    return 0;
+    // A guest string that fills the buffer without a NUL used to be reported
+    // as success, leaving callers to strlen() past the end of their stack
+    // buffer. Callers treat a non-zero return as EFAULT.
+    return terminated ? 0 : 1;
 }
 
 int user_write_string(addr_t addr, const char *buf) {

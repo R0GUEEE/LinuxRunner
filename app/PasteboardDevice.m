@@ -46,7 +46,10 @@ static const char *get_data(clip_fd *fd, size_t *len) {
     }
 
     NSString __autoreleasing *contents = UIPasteboard.generalPasteboard.string;
-    *len = contents.length;
+    // UTF8String is a byte buffer, so the length must be a byte count.
+    // NSString.length counts UTF-16 code units and truncates/corrupts every
+    // non-ASCII paste ("日本語" reports 3 for 9 bytes).
+    *len = contents == nil ? 0 : [contents lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
     return contents.UTF8String;
 }
 
@@ -87,10 +90,15 @@ static int clipboard_write_sync(clip_fd *fd) {
 
     // FIXME(stek29): This logs "Returning local object of class NSString"
     // and I have no idea why (or how to fix it)
-    UIPasteboard.generalPasteboard.string = [[NSString alloc]
-                                             initWithBytes:data
-                                             length:len
+    NSString *string = [[NSString alloc] initWithBytes:data
+                                               length:len
                                              encoding:NSUTF8StringEncoding];
+    if (string == nil) {
+        // Not valid UTF-8 (binary output, a truncated sequence). Assigning
+        // nil would clear the user's clipboard and report success anyway.
+        return _EINVAL;
+    }
+    UIPasteboard.generalPasteboard.string = string;
 
     // Reset generation since we've just updated UIPasteboard
     // note: offset doesn't change

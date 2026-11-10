@@ -94,6 +94,10 @@ enum { LRAudioPrebuffer = LRAudioRate * 6 / 100 };  // after running dry, resume
         struct sockaddr_in address = {.sin_len = sizeof address, .sin_family = AF_INET, .sin_port = htons(_port)};
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         if (connect(fd, (struct sockaddr *)&address, sizeof address) != 0) { close(fd); usleep(500000); continue; }
+        // Publish the socket before checking _stopped: if -stop ran while we
+        // were connecting, its atomic_exchange already saw -1 and will not
+        // close this descriptor, so close it here instead of leaking it.
+        if (atomic_load(&_stopped)) { close(fd); break; }
         atomic_store(&_socket, fd);
         if (atomic_load(&_stopped)) break;
         atomic_store(&_connected, true); pending = 0;
@@ -165,9 +169,19 @@ enum { LRAudioPrebuffer = LRAudioRate * 6 / 100 };  // after running dry, resume
     if (!_engine) {
         _engine = [AVAudioEngine new];
         AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:LRAudioRate channels:LRAudioChannels];
-        __unsafe_unretained LRAudioBridge *weak = self; // the engine never outlives -stop
+        __weak LRAudioBridge *weak = self; // zeroing weak: an in-flight render call must see nil, not freed memory
         _source = [[AVAudioSourceNode alloc] initWithFormat:format renderBlock:^OSStatus(BOOL *silence, const AudioTimeStamp *time, AVAudioFrameCount frames, AudioBufferList *output) {
-            (void)silence; (void)time; return [weak render:frames into:output];
+            (void)silence; (void)time;
+            // AVAudioEngine -stop does not join a render callback that is
+            // already running. A nil check on a weak reference keeps that
+            // in-flight call from touching _ring after dealloc freed it.
+            LRAudioBridge *strong = weak;
+            if (strong == nil) {
+                for (UInt32 i = 0; i < output->mNumberBuffers; i++)
+                    memset(output->mBuffers[i].mData, 0, output->mBuffers[i].mDataByteSize);
+                return noErr;
+            }
+            return [strong render:frames into:output];
         }];
         [_engine attachNode:_source];
         [_engine connect:_source to:_engine.mainMixerNode format:format];

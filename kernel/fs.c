@@ -405,7 +405,13 @@ out:
 // that yet because it's more work and the efficiency gain from that is dwarfed
 // by the inefficiency of the emulator.
 
+#define IOV_MAX_ 1024
+
 static struct iovec_ *read_iovec(addr_t iovec_addr, unsigned iovec_count) {
+    // Linux caps the vector at IOV_MAX; without this, readv(fd, iov, ~0u)
+    // asks for a 68 GiB allocation before any validation.
+    if (iovec_count > IOV_MAX_)
+        return ERR_PTR(_EINVAL);
 #ifdef GUEST_ARM64
     // ARM64 uses 64-bit iovec structure (16 bytes per entry)
     // We read the 64-bit version and convert to 32-bit for internal use

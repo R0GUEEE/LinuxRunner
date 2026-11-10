@@ -99,6 +99,12 @@ BOOL CLIsAuthorized(CLAuthorizationStatus status) {
     }
 }
 
+// iOS 14+ delivers authorization changes through this method instead of the
+// deprecated didChangeAuthorizationStatus: above.
+- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager API_AVAILABLE(ios(14.0)) {
+    [self locationManager:manager didChangeAuthorizationStatus:manager.authorizationStatus];
+}
+
 @end
 
 @interface LocationFile : NSObject {
@@ -128,6 +134,8 @@ BOOL CLIsAuthorized(CLAuthorizationStatus status) {
     if (err < 0)
         return err;
     CLLocation *location = self.tracker.latest;
+    if (location == nil)
+        return _EAGAIN;     // no fix yet: report it instead of inventing 0,0
     NSString *output = [NSString stringWithFormat:@"%+f,%+f\n", location.coordinate.latitude, location.coordinate.longitude];
     buffer = [output dataUsingEncoding:NSUTF8StringEncoding];
     bufferOffset = 0;
