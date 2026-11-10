@@ -11,6 +11,14 @@ import UniformTypeIdentifiers
 // archive, so this screen validates the shape, imports, then records the
 // environment in the catalog.
 
+/// Not actor-isolated: read from the importer, the detached copy and the view.
+enum RootfsImportLimits {
+    /// 512 MiB is the bridge's own ceiling for an imported archive; checking it
+    /// here turns a late failure into an immediate explanation.
+    static let maximumBytes: Int64 = 512 * 1024 * 1024
+    static let acceptedExtensions = ["tar.gz", "tgz", "tar.xz", "txz", "tar"]
+}
+
 struct RootfsImportRequest: Identifiable {
     let id = UUID()
     let url: URL
@@ -26,11 +34,6 @@ struct RootfsImportRequest: Identifiable {
     @Published private(set) var fraction = 0.0
     @Published private(set) var message = ""
     @Published private(set) var failure: String?
-
-    /// 512 MiB is the bridge's own ceiling for an imported archive; checking it
-    /// here turns a late failure into an immediate explanation.
-    static let maximumBytes: Int64 = 512 * 1024 * 1024
-    static let acceptedExtensions = ["tar.gz", "tgz", "tar.xz", "txz", "tar"]
 
     private final class Flag: @unchecked Sendable {
         private let lock = NSLock()
@@ -67,7 +70,7 @@ struct RootfsImportRequest: Identifiable {
 
     static func looksAcceptable(_ url: URL) -> Bool {
         let name = url.lastPathComponent.lowercased()
-        return acceptedExtensions.contains { name.hasSuffix("." + $0) }
+        return RootfsImportLimits.acceptedExtensions.contains { name.hasSuffix("." + $0) }
     }
 
     /// Synchronous copy + hash of the selection, so the sheet can show size and
@@ -81,7 +84,7 @@ struct RootfsImportRequest: Identifiable {
         }
         let bytes = Int64(values.fileSize ?? 0)
         guard bytes > 0 else { throw NSError(domain: "LinuxRunner.rootfs", code: 22, userInfo: [NSLocalizedDescriptionKey: "The selected file is empty."]) }
-        guard bytes <= maximumBytes else {
+        guard bytes <= RootfsImportLimits.maximumBytes else {
             throw NSError(domain: "LinuxRunner.rootfs", code: 27, userInfo: [NSLocalizedDescriptionKey: "That archive is \(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)). An imported filesystem must be 512 MB or smaller; the importer unpacks it into the app container, which needs room for both."])
         }
         let sha = try DebianInstaller.sha256(url)
