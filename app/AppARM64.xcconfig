@@ -3,8 +3,8 @@
 #include "XtermRenderer.xcconfig"
 
 // ARM64 app release version, independent of inherited non-ARM64 targets.
-MARKETING_VERSION = 1.1.3
-CURRENT_PROJECT_VERSION = 907
+MARKETING_VERSION = 1.1.4
+CURRENT_PROJECT_VERSION = 908
 LINUXRUNNER_DIAGNOSTIC = NO
 
 // LinuxRunner identity and native environment manager. Override root bundle

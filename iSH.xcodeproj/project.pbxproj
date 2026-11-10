@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		OP000002AF96D90D00FFB7A4 /* OpsTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = OP000001AF96D90D00FFB7A4 /* OpsTools.swift */; };
 		OP000004AF96D90D00FFB7A4 /* LinuxManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = OP000003AF96D90D00FFB7A4 /* LinuxManagement.swift */; };
+		OP000006AF96D90D00FFB7A4 /* RootfsImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = OP000005AF96D90D00FFB7A4 /* RootfsImport.swift */; };
 		PR000002AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PR000001AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy */; };
 		1C1100000000000000000C02 /* lr_zstd_decompress.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C02; };
 		1C1100000000000000000C01 /* steamos_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C01; };
@@ -954,6 +955,7 @@
 1C1200000000000000000001 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/Diagnostics.swift; sourceTree = SOURCE_ROOT; };
 		OP000001AF96D90D00FFB7A4 /* OpsTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/OpsTools.swift; sourceTree = SOURCE_ROOT; };
 		OP000003AF96D90D00FFB7A4 /* LinuxManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/LinuxManagement.swift; sourceTree = SOURCE_ROOT; };
+		OP000005AF96D90D00FFB7A4 /* RootfsImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/RootfsImport.swift; sourceTree = SOURCE_ROOT; };
 		1D1200000000000000000854 /* shader_compiler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = graphics/shader_compiler.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -2668,6 +2670,7 @@
 				1C1100000000000000000B01 /* SteamOSManifest.swift */,
 				OP000002AF96D90D00FFB7A4 /* OpsTools.swift in Sources */,
 				OP000004AF96D90D00FFB7A4 /* LinuxManagement.swift in Sources */,
+				OP000006AF96D90D00FFB7A4 /* RootfsImport.swift in Sources */,
 				1C1100000000000000000002 /* DebianBootstrap.c */,
 				AA000020AF96D90D00FFB7A4 /* main.m in Sources */,
 				AA000021AF96D90D00FFB7A4 /* LocationDevice.m in Sources */,

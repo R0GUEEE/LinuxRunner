@@ -2,6 +2,23 @@
 
 User-visible changes follow Added / Changed / Fixed / Known Issues.
 
+## [1.1.4] — 2026-11-10 (Build 908)
+
+### Added
+
+- **Import Rootfs** (Settings › Linux Environment): bring your own ARM64 Linux userspace.
+  Accepts `.tar`, `.tar.gz`, `.tgz`, `.tar.xz` and `.txz` up to 512 MB, shows the size and
+  SHA-256 before importing, and unpacks through the existing verified import path (private
+  copy, hash of those exact bytes, entry-budgeted extraction, no traversal).
+  The distribution name, version, package manager and shell are read from `/etc/os-release`
+  and from the binaries present, so Updates and Quick Commands work on the new environment.
+  An archive wrapped in one top-level folder is detected and re-imported without it; anything
+  that is not a root filesystem is rolled back with an explanation instead of being kept.
+
+### Changed
+
+- Version 1.1.4 (908).
+
 ## [1.1.3] — 2026-11-10 (Build 907)
 
 ### Added

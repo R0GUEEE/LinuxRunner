@@ -720,6 +720,7 @@ struct ManagerView: View {
             Section("Linux Environment") {
                 NavigationLink(destination: OpsDashboardView(manager: manager)) { SettingsLabel("System Health", "waveform.path.ecg", .red) }
                 NavigationLink(destination: QuickCommandsView()) { SettingsLabel("Quick Commands", "terminal.fill", .mint) }
+                NavigationLink(destination: ImportRootfsView(manager: manager)) { SettingsLabel("Import Rootfs", "square.and.arrow.down.fill", .teal) }
                 NavigationLink(destination: LinuxUsersView()) { SettingsLabel("Linux Users", "person.2.fill", .blue) }
                 NavigationLink(destination: ApplicationGridView(manager: manager, run: run)) { SettingsLabel("Application Launcher", "square.grid.2x2.fill", .indigo) }
                 NavigationLink(destination: FileSharingView(environment: activeEnvironment, manager: manager, share: $share)) { SettingsLabel("File Sharing", "folder.fill", .cyan) }
