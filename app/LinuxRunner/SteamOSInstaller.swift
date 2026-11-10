@@ -81,7 +81,7 @@ private final class SteamOSDownloader: NSObject, URLSessionDownloadDelegate, @un
         session.finishTasksAndInvalidate()
         let nsError = error as NSError?
         if let data = nsError?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data, data.count >= 1024,
-           !(nsError?.domain == NSURLErrorDomain && nsError?.code == NSURLErrorCannotResume) {
+           !(nsError?.domain == NSURLErrorDomain && nsError?.code == URLError.cannotResume.rawValue) {
             try? data.write(to: resumeFile, options: .atomic)
         } else if nsError != nil {
             // Unusable resume state must not survive, or "Try Again" loops.
