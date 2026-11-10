@@ -638,7 +638,11 @@ static int page_flip(struct fd *fd, struct drm_file *f, struct page_flip *p) {
 
 static int add_fb(struct drm_file *f, uint32_t width, uint32_t height, uint32_t format, uint32_t handle, uint32_t pitch, uint32_t offset, uint32_t *id) {
     if (format != FOURCC('X', 'R', '2', '4') && format != FOURCC('A', 'R', '2', '4')) return _EINVAL;
-    if (!width || !height || pitch < width * 4) return _EINVAL;
+    // width * 4 is 32-bit: a width >= 0x40000000 wrapped this check, so a
+    // framebuffer with a 4-byte pitch and a huge declared width passed and
+    // the KMS bridge then read scanout_width * 4 bytes per 4-byte row.
+    if (!width || !height || width > 16384 || height > 16384 ||
+        (uint64_t) pitch < (uint64_t) width * 4) return _EINVAL;
     lock(&f->lock);
     struct buffer *b = lookup(f, handle);
     if (b) atomic_fetch_add(&b->refs, 1);

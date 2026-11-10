@@ -588,8 +588,9 @@ static int LRGuestMetalQueryBlocks(void *context,struct lr_gl_blocks *r){
 }
 static int LRGuestMetalUniformBlocks(void *context,const struct lr_gl_block_data *r,size_t bytes){
  @autoreleasepool {LRGuestMetalContext *c=(__bridge LRGuestMetalContext *)context;LRGuestMetalProgram *p=c.programs[@(r->program)];
+  if(!p||!p.blocksData||bytes<sizeof(*r))return -22;
   const struct lr_gl_blocks *reflection=p.blocksData.bytes;
-  if(!p||r->count!=reflection->count||bytes<sizeof(*r))return -22;
+  if(r->count!=reflection->count)return -22;
   for(unsigned i=0;i<r->count;i++)if(r->block[i].bytes!=reflection->block[i].bytes||r->block[i].offset<sizeof(*r)||r->block[i].offset>bytes||r->block[i].bytes>bytes-r->block[i].offset)return -22;
   NSArray<NSMutableData *> *data=c.uniformBlockData[@(r->program)];
   if(!data){NSMutableArray *fresh=[NSMutableArray new];for(unsigned i=0;i<r->count;i++)[fresh addObject:[NSMutableData dataWithLength:r->block[i].bytes]];data=fresh;c.uniformBlockData[@(r->program)]=data;}

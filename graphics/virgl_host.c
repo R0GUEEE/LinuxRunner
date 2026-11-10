@@ -183,7 +183,9 @@ static void context_destroy(uint32_t ctx) { struct op o = {.a = ctx}; on_gpu(do_
 static void do_resource_create(void *p) {
     struct op *o = p; const struct lr_virgl_resource_args *a = o->args;
     if (a->handle >= backing_count) {
+        if (a->handle > (UINT32_MAX - 64) / 2) { o->result = -1; return; }
         uint32_t count = a->handle * 2 + 64;
+        if (count <= backing_count) { o->result = -1; return; }
         struct iovec **grown = realloc(backing, count * sizeof *grown);
         if (!grown) { o->result = -1; return; }
         memset(grown + backing_count, 0, (count - backing_count) * sizeof *grown);
