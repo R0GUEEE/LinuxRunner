@@ -1,0 +1,93 @@
+name: build-ipa
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: "Bundle identifier"
+        default: "dev.linuxrunner.app"
+        required: false
+      artifact_suffix:
+        description: "Extra suffix for the artifact name (optional)"
+        default: ""
+        required: false
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: build-ipa-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      BUNDLE_ID: ${{ inputs.bundle_id || 'dev.linuxrunner.app' }}
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Toolchain report
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          uname -m
+          sysctl -n hw.memsize hw.ncpu
+          df -h /
+
+      - name: Install build dependencies
+        run: |
+          brew install meson ninja cmake lld pkg-config || true
+          for t in meson ninja cmake python3 pkg-config ld.lld; do
+            printf '%-10s %s\n' "$t" "$(command -v "$t" || echo MISSING)"
+          done
+
+      - name: Verify GUI support manifest
+        run: python3 scripts/generate-gui-support-manifest.py --check
+
+      - name: Bootstrap prerequisites check
+        run: scripts/bootstrap-macos.sh
+
+      - name: Build unsigned IPA
+        run: |
+          export PATH="$(brew --prefix)/opt/lld/bin:$PATH"
+          scripts/build-ipa.sh --unsigned 2>&1 | tee build-ipa.log
+
+      - name: Verify IPA
+        run: |
+          set -o pipefail
+          python3 scripts/verify-ipa.py build/releases 2>&1 | tee verify.log
+          ls -lh build/releases/
+
+      - name: Collect logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs${{ inputs.artifact_suffix }}
+          path: |
+            build-ipa.log
+            verify.log
+            build/releases/*.log
+            build/releases/*.json
+            build/releases/*.txt
+          if-no-files-found: ignore
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: LinuxRunner-unsigned-ipa${{ inputs.artifact_suffix }}
+          path: |
+            build/releases/*.ipa
+            build/releases/*.sha256
+            build/releases/*.entitlements.plist
+          if-no-files-found: error
