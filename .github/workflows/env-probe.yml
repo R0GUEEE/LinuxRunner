@@ -1,0 +1,9 @@
+name: env-probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: macos-15
+    steps:
+      - run: uname -a && sw_vers && xcodebuild -version && xcrun --sdk iphoneos --show-sdk-version
+      - run: echo "probe-ok"
