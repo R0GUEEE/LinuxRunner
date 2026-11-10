@@ -75,6 +75,7 @@ jobs:
 
       - name: Build unsigned IPA
         run: |
+          set -o pipefail   # a build failure must fail the step, not be masked by tee
           export PATH="$(brew --prefix)/opt/lld/bin:$PATH"
           scripts/build-ipa.sh --unsigned 2>&1 | tee build-ipa.log
 

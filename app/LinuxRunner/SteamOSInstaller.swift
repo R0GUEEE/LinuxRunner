@@ -43,8 +43,15 @@ private final class SteamOSDownloader: NSObject, URLSessionDownloadDelegate, @un
                 configuration.waitsForConnectivity = true
                 let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
                 self.session = session
-                if let data = try? Data(contentsOf: resumeFile) { task = session.downloadTask(withResumeData: data) }
-                else { task = session.downloadTask(with: url) }
+                // Only reuse plausible resume data: a stale or truncated blob
+                // (iOS removes the temp file it points at) makes every later
+                // attempt fail with the same error, with no way to clear it.
+                if let data = try? Data(contentsOf: resumeFile), data.count >= 1024, data.count < 4 << 20 {
+                    task = session.downloadTask(withResumeData: data)
+                } else {
+                    try? FileManager.default.removeItem(at: resumeFile)
+                    task = session.downloadTask(with: url)
+                }
                 task?.resume()
             }
         } onCancel: {
@@ -72,7 +79,14 @@ private final class SteamOSDownloader: NSObject, URLSessionDownloadDelegate, @un
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         session.finishTasksAndInvalidate()
-        if let data = (error as NSError?)?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data { try? data.write(to: resumeFile, options: .atomic) }
+        let nsError = error as NSError?
+        if let data = nsError?.userInfo[NSURLSessionDownloadTaskResumeData] as? Data, data.count >= 1024,
+           !(nsError?.domain == NSURLErrorDomain && nsError?.code == NSURLErrorCannotResume) {
+            try? data.write(to: resumeFile, options: .atomic)
+        } else if nsError != nil {
+            // Unusable resume state must not survive, or "Try Again" loops.
+            try? FileManager.default.removeItem(at: resumeFile)
+        }
         let failure = error ?? moveError
         if let failure { continuation?.resume(throwing: failure) } else { continuation?.resume() }
         continuation = nil

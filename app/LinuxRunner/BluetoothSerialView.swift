@@ -29,8 +29,11 @@ struct BluetoothSerialView: View {
             }
             if !links.isEmpty {
                 Section("Linux Serial Ports") {
-                    ForEach(links.indices, id: \.self) { i in
-                        let link = links[i]
+                    // Snapshot the array: index identity over a @State array that
+                    // shrinks on a disconnect notification traps in SwiftUI.
+                    let linked = links
+                    ForEach(linked.indices, id: \.self) { i in
+                        let link = linked[i]
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Circle().fill(color(link["state"] as? String)).frame(width: 8, height: 8)

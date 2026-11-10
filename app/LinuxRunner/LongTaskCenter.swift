@@ -104,7 +104,18 @@ import BackgroundTasks
     }
 
     @objc func end(_ token: String, success: Bool, message: String) {
-        guard let index = entries.firstIndex(where: { $0.id == token }) else { return }
+        guard let index = entries.firstIndex(where: { $0.id == token }) else {
+            // The 20-entry cap can evict the visible entry while the work is
+            // still running. The system resources tied to the token are not
+            // part of that list and still have to be released.
+            #if canImport(BackgroundTasks)
+            if #available(iOS 26.0, *), let task = system.removeValue(forKey: token) as? BGContinuedProcessingTask {
+                task.setTaskCompleted(success: success)
+            }
+            #endif
+            if let assertion = assertions.removeValue(forKey: token) { UIApplication.shared.endBackgroundTask(assertion) }
+            return
+        }
         entries[index].state = success ? .completed : .failed
         entries[index].ended = Date()
         entries[index].detail = message

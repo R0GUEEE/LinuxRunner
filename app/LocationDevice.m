@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 #include "kernel/fs.h"
+#include "kernel/errno.h"
 #include "fs/dev.h"
 #include "util/sync.h"
 
