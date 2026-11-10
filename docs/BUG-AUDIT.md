@@ -62,6 +62,32 @@ parser bounds-checks every packet and verifies the signature against a pinned
 fingerprint; no SwiftUI state is written off the main actor; the MRC/ARC memory
 management in the terminal and framebuffer path is balanced.
 
+## Guest graphics path (Metal bridge + virtio-gpu)
+
+This is the largest unauthenticated guest→host surface in the fork and it is entirely
+new code — upstream iSH has none of it. `fs/gpu.c`'s ioctl dispatcher and `fs/drm.c`'s
+handle/mmap/event paths were hammered and held up; what follows is what did not.
+
+| # | Severity | Where | Problem | Status |
+| --- | --- | --- | --- | --- |
+| G1 | high | `app/LinuxRunner/GuestMetalBackend.h` `LRGuestMetalUniformBlocks` | Formed `reflection = p.blocksData.bytes` and dereferenced it before the `!p` check, so a program object without reflection state means a NULL read in the host process. | fixed |
+| G2 | medium-high | `fs/drm.c` `add_fb` | `pitch < width * 4` was a 32-bit multiply: a `width ≥ 0x40000000` wrapped it, so an `ADD_FB2` with `pitch = 4` and a huge declared width passed, and the KMS bridge then read `min(width, screen_width) * 4` bytes out of a 4-byte-stride mapping. | fixed |
+| G3 | low | `graphics/virgl_host.c` resource table | `count = handle * 2 + 64` in 32-bit; on wrap `count < backing_count` and the `memset` length underflows. ~2 billion resource creations to reach — guarded anyway. | fixed |
+| G4 | medium | `fs/drm.c` `virgl_transfer` | `VIRTGPU_TRANSFER_*` forwards `stride`, `layer_stride`, `offset` and all six box fields to virglrenderer with no validation against the resource size, and `layer_stride` is narrowed to 32 bits. Every other ioctl in that file validates; this one delegates the safety of a host-memory copy to the dependency. | open |
+| G5 | medium | `GuestMetalBackend.h` instance attributes | The divisor/value packet is sticky context state, never cleared on program change, delete or resize — a later non-instanced draw silently reuses stale instance data. | open |
+| G6 | medium-low | `graphics/guest_uniforms.inc` | The UBO packet is assembled into a fixed scratch buffer before the kernel validates block sizes; only the shader compiler's reflection limits keep it in bounds today. | open |
+| G7 | low | `GuestMetalBackend.h` `READ`/`READ_REGION` | Skip the `LRGuestResidentRelease` that every sibling transfer calls, so `glReadPixels` while a resident target is bound returns stale frame data or a spurious `EINVAL`. | open |
+| G8 | low | `fs/gpu.c`, `guest_gl_subset.c` | `-EAGAIN` from the draw path (main-thread guard) reaches the guest as `GL_INVALID_OPERATION`, indistinguishable from a genuinely illegal call. | open |
+
+Verified clean in the same pass: `fs/gpu.c`'s `r->bytes` pinning and interior
+`offset`/`bytes` validation, the MRT header re-check after the body copy (closes the
+check-then-copy TOCTOU), the transfer-buffer reserve/commit unwind, `create_dumb`'s
+64-bit sizing with sealed memfds, `drm_mmap`'s window validation, the vblank/page-flip
+event budget, the framebuffer refcount around `CLOSEFB` while scanning out, the
+triple-buffered framebuffer upload (no `replaceRegion` against a texture with a live
+command buffer), and the shader-reflection writers (every array write is limit-checked
+inside a `try` that turns an overrun into a failed link).
+
 ## iOS 27
 
 Covered separately in [IOS27.md](IOS27.md): scene life cycle already adopted, the
