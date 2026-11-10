@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		OP000002AF96D90D00FFB7A4 /* OpsTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = OP000001AF96D90D00FFB7A4 /* OpsTools.swift */; };
 		PR000002AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PR000001AF96D90D00FFB7A4 /* PrivacyInfo.xcprivacy */; };
 		1C1100000000000000000C02 /* lr_zstd_decompress.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C02; };
 		1C1100000000000000000C01 /* steamos_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C1200000000000000000C01; };
@@ -950,6 +951,7 @@
 		1B1200000000000000000003 /* RFBProtocol.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = app/LinuxRunner/RFBProtocol.c; sourceTree = SOURCE_ROOT; };
 		1B1200000000000000000004 /* GUISupport.bundle */ = {isa = PBXFileReference; lastKnownFileType = wrapper.cfbundle; path = app/LinuxRunner/GUISupport.bundle; sourceTree = SOURCE_ROOT; };
 1C1200000000000000000001 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/Diagnostics.swift; sourceTree = SOURCE_ROOT; };
+		OP000001AF96D90D00FFB7A4 /* OpsTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app/LinuxRunner/OpsTools.swift; sourceTree = SOURCE_ROOT; };
 		1D1200000000000000000854 /* shader_compiler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = graphics/shader_compiler.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -2662,6 +2664,7 @@
 				1C1100000000000000000F03 /* AppStoreView.swift */,
 				1C1100000000000000000B02 /* SteamOSInstaller.swift */,
 				1C1100000000000000000B01 /* SteamOSManifest.swift */,
+				OP000002AF96D90D00FFB7A4 /* OpsTools.swift in Sources */,
 				1C1100000000000000000002 /* DebianBootstrap.c */,
 				AA000020AF96D90D00FFB7A4 /* main.m in Sources */,
 				AA000021AF96D90D00FFB7A4 /* LocationDevice.m in Sources */,

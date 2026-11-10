@@ -718,6 +718,8 @@ struct ManagerView: View {
                 NavigationLink(destination: TerminalSettingsView()) { SettingsLabel("Terminal & Keyboard", "keyboard.fill", .gray) }
             }
             Section("Linux Environment") {
+                NavigationLink(destination: OpsDashboardView(manager: manager)) { SettingsLabel("System Health", "waveform.path.ecg", .red) }
+                NavigationLink(destination: QuickCommandsView()) { SettingsLabel("Quick Commands", "terminal.fill", .mint) }
                 NavigationLink(destination: LinuxUsersView()) { SettingsLabel("Linux Users", "person.2.fill", .blue) }
                 NavigationLink(destination: ApplicationGridView(manager: manager, run: run)) { SettingsLabel("Application Launcher", "square.grid.2x2.fill", .indigo) }
                 NavigationLink(destination: FileSharingView(environment: activeEnvironment, manager: manager, share: $share)) { SettingsLabel("File Sharing", "folder.fill", .cyan) }
@@ -2144,6 +2146,7 @@ private struct TerminalSettingsView: View {
                 Picker("Colors", selection: $scheme) { Text("Match System").tag(0); Text("Light").tag(1); Text("Dark").tag(2) }
                     .onChange(of: scheme) { prefs.colorScheme = .init(rawValue: $0) ?? prefs.colorScheme }
             }
+            StartupCommandSection()
             Section {
                 Picker("Caps Lock", selection: $capsLock) { Text("Caps Lock").tag(0); Text("Control").tag(1); Text("Escape").tag(2) }
                     .onChange(of: capsLock) { if let v = CapsLockMapping(rawValue: $0) { prefs.capsLockMapping = v } }
