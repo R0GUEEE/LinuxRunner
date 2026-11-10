@@ -3,7 +3,11 @@ on:
   workflow_dispatch:
 jobs:
   probe:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
-      - run: uname -a && sw_vers && xcodebuild -version && xcrun --sdk iphoneos --show-sdk-version
-      - run: echo "probe-ok"
+      - run: uname -a && sw_vers
+      - run: ls -1 /Applications | grep -i xcode
+      - run: xcodebuild -version && xcrun --sdk iphoneos --show-sdk-version && xcrun --sdk iphoneos --show-sdk-path
+      - run: xcodebuild -showsdks
+      - run: which meson ninja cmake pkg-config python3 && python3 -V
+      - run: sysctl -n hw.memsize hw.ncpu
