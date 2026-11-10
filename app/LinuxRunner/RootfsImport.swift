@@ -236,7 +236,7 @@ struct RootfsImportRequest: Identifiable {
         phase = .done
     }
 
-    private static func baseMetadata(name: String, topLevel: String) -> [String: String] {
+    private nonisolated static func baseMetadata(name: String, topLevel: String) -> [String: String] {
         ["distributionID": "custom",
          "distribution": name,
          "version": "imported",
