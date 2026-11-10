@@ -2,6 +2,25 @@
 
 User-visible changes follow Added / Changed / Fixed / Known Issues.
 
+## [1.1.3] — 2026-11-10 (Build 907)
+
+### Added
+
+- **Updates** (Storage & Maintenance): queries the active distribution's own updater (`apt`,
+  `pacman`, `dnf`, `apk`) through the bundled package script, lists upgradable packages with
+  installed → available versions, and offers **Upgrade All** and **Refresh Package Lists** in a
+  terminal so the package manager's own confirmation still guards the transaction. SteamOS is
+  inspection-only and says so.
+- **Services**: lists `/etc/init.d` and `/etc/rc.d/init.d` scripts from the environment and runs
+  start/status/restart/stop through the terminal. States plainly that this runtime has no init
+  system, so nothing starts these at boot.
+- **System Logs**: read-only browser for the environment's `/var/log`, newest first, with a bounded
+  64 KB tail view, copy/select and share.
+
+### Changed
+
+- Version 1.1.3 (907).
+
 ## [1.1.2] — 2026-11-10 (Build 906)
 
 ### Added

@@ -728,6 +728,11 @@ struct ManagerView: View {
             }
             Section("Storage & Maintenance") {
                 NavigationLink(destination: StorageManagementView(environments: manager.environments)) { SettingsLabel("Storage", "internaldrive.fill", .gray) }
+                if let activeEnvironment {
+                    NavigationLink(destination: UpdatesView(environment: activeEnvironment)) { SettingsLabel("Updates", "arrow.triangle.2.circlepath", .green) }
+                    NavigationLink(destination: ServicesView(environment: activeEnvironment)) { SettingsLabel("Services", "gearshape.2.fill", .gray) }
+                    NavigationLink(destination: SystemLogsView(environment: activeEnvironment)) { SettingsLabel("System Logs", "doc.text.magnifyingglass", .brown) }
+                }
                 Button { LRRuntimeBridge.exportDesktopReport { url in if let url { share = ExportItem(url: url) } } } label: { SettingsLabel("Export Desktop Report", "doc.text.magnifyingglass", .brown) }.foregroundColor(.primary)
             }
             Section {
