@@ -27,4 +27,18 @@ if "$tool" good.tar wrongprefix other 2>/dev/null; then echo 'FAIL: wrong prefix
 if "$tool" good.tar dotdot ../top 2>/dev/null; then echo 'FAIL: invalid prefix accepted'; exit 1; fi
 "$tool" good.tar plain
 [ -f plain/data/top/etc/x ] || { echo 'FAIL: unprefixed import changed'; exit 1; }
-echo 'FAKEFS_PREFIX_IMPORT_PASS strip hardlink symlink refuse-outside refuse-wrong-prefix refuse-dotdot unprefixed-unchanged'
+# A valid tar header declaring a >4 GiB member must fail before payload reads.
+python3 - <<'PY'
+header = bytearray(512)
+def put(start, value): header[start:start + len(value)] = value
+put(0, b'oversize')
+put(100, b'0000644\0'); put(108, b'0000000\0'); put(116, b'0000000\0')
+put(124, ('%011o\0' % (4 * 1024 * 1024 * 1024 + 1)).encode())
+put(136, b'00000000000\0'); header[148:156] = b'        '
+put(156, b'0'); put(257, b'ustar\0'); put(263, b'00')
+header[148:156] = ('%06o\0 ' % sum(header)).encode()
+open('oversize.tar', 'wb').write(header + bytes(1024))
+PY
+if "$tool" oversize.tar too-large 2>oversize.err; then echo 'FAIL: expanded payload limit not enforced'; exit 1; fi
+rg -q '4 GiB import limit' oversize.err || { cat oversize.err; echo 'FAIL: expanded-limit diagnostic'; exit 1; }
+echo 'FAKEFS_PREFIX_IMPORT_PASS strip hardlink symlink refuse-outside refuse-wrong-prefix refuse-dotdot unprefixed-unchanged expanded-byte-limit'

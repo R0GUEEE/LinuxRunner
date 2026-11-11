@@ -201,11 +201,26 @@ static bool fakefs_import_contents(const char *archive_path, int archive_fd, con
     sqlite3_stmt *insert_hardlink = PREPARE("insert or replace into paths values (?, (select inode from paths where path = ? limit 1))");
 
     bool archive_has_root = false;
+    unsigned long long expanded_bytes = 0;
+    unsigned long long archive_entries = 0;
+    // Compressed archives can expand far beyond the 512 MiB source-file cap.
+    // This path is used for archive imports; SteamOS uses the separate FD stream
+    // importer and retains its own image/package bounds.
+    const unsigned long long max_expanded_bytes = 4ULL * 1024 * 1024 * 1024;
+    const unsigned long long max_archive_entries = 500000;
 
-    // do actual shit
+    // Import tar metadata and payloads.
     struct archive_entry *entry;
     while ((err = archive_read_next_header(archive, &entry)) == ARCHIVE_OK ||
             (err == ARCHIVE_WARN && pax_original_names(archive, entry))) {
+        if (++archive_entries > max_archive_entries)
+            FILL_ERR(ERR_POSIX, E2BIG, "archive exceeds the 500,000-entry import limit");
+        if (archive_entry_filetype(entry) == AE_IFREG) {
+            la_int64_t declared_size = archive_entry_size(entry);
+            if (declared_size < 0 || (unsigned long long)declared_size > max_expanded_bytes - expanded_bytes)
+                FILL_ERR(ERR_POSIX, EFBIG, "expanded filesystem exceeds the 4 GiB import limit");
+            expanded_bytes += (unsigned long long)declared_size;
+        }
         char entry_path[MAX_PATH];
         if (!path_normalize(archive_entry_pathname(entry), entry_path)) {
             // Avoid pwnage

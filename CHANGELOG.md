@@ -2,6 +2,32 @@
 
 User-visible changes follow Added / Changed / Fixed / Known Issues.
 
+## [1.1.5] — 2026-11-11 (Build 909)
+
+### Added
+
+- Custom rootfs archive extraction now enforces a **4 GiB expanded regular-file budget** and a
+  **500,000-entry budget** in fakefsify, before accepting unbounded compressed payloads. Each
+  import fails cleanly with a specific limit error; the separate SteamOS image-stream path is
+  not affected.
+
+### Fixed
+
+- Import extraction, metadata finalization, and exchange-directory creation failures are now
+  surfaced instead of silently registering a partially finalized environment. Failed catalog
+  writes remove the in-memory catalog row before rollback.
+- Wrapped-archive retry only runs when the wrapper directory is the entire top-level payload;
+  cleanup failure stops the retry and identifies the orphaned environment.
+- Cancelling during wrapped retry cleans up the retry root and reports cleanup failures.
+- Compound archive suffixes are stripped exactly once when deriving the default environment
+  name (`foo.tar.gz` → `foo`).
+- Added a regression fixture proving a tar header claiming a >4 GiB member is rejected before
+  payload reads.
+
+### Changed
+
+- Version 1.1.5 (909).
+
 ## [1.1.4] — 2026-11-10 (Build 908)
 
 ### Added
