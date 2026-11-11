@@ -175,6 +175,13 @@ struct RootfsImportRequest: Identifiable {
                     return .success(())
                 } catch { return .failure(error) }
             }.value
+            if flag.isSet {
+                _ = await Self.deleteRoot(retryRoot)
+                phase = .failed
+                failure = nil
+                message = ""
+                return
+            }
             if case .failure(let error) = retried {
                 _ = await Self.deleteRoot(retryRoot)
                 phase = .failed
