@@ -480,9 +480,14 @@ struct ImportRootfsView: View {
             if phase == .done { imported = name; }
         }
         .alert("Import Rootfs", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
-            Button("OK") { problem = nil; importer.reset() }
+            Button("OK") { problem = nil }
         } message: {
             Text(problem ?? "")
+        }
+        .alert("Import failed", isPresented: Binding(get: { importer.phase == .failed && importer.failure != nil }, set: { if !$0 { importer.reset() } })) {
+            Button("OK") { importer.reset() }
+        } message: {
+            Text(importer.failure ?? "The filesystem could not be imported.")
         }
         .alert("Environment imported", isPresented: Binding(get: { imported != nil }, set: { if !$0 { imported = nil } })) {
             Button("Done") { imported = nil; dismiss() }
