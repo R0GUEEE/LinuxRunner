@@ -152,7 +152,7 @@ struct RootfsImportRequest: Identifiable {
         if flag.isSet {
             let cleanup = await Self.deleteRoot(root)
             phase = .failed
-            failure = cleanup.map { "Import was cancelled, but the partial filesystem could not be removed: \\($0). Remove the leftover from Settings › Storage." }
+            failure = cleanup.map { "Import was cancelled, but the partial filesystem could not be removed: \($0). Remove the leftover from Settings › Storage." }
             message = ""
             return
         }
@@ -173,7 +173,7 @@ struct RootfsImportRequest: Identifiable {
             if flag.isSet {
                 let cleanup = await Self.deleteRoot(root)
                 phase = .failed
-                failure = cleanup.map { "Import was cancelled, but the unpacked filesystem could not be removed: \\($0). Remove the leftover from Settings › Storage." }
+                failure = cleanup.map { "Import was cancelled, but the unpacked filesystem could not be removed: \($0). Remove the leftover from Settings › Storage." }
                 message = ""
                 return
             }
@@ -401,6 +401,10 @@ struct ImportRootfsView: View {
     @State private var confirmed = false
     @State private var imported: String?
 
+    private var canImport: Bool {
+        picked != nil && !inspecting && !importer.running && !name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     private var alertTitle: String {
         if importer.phase == .failed && importer.failure != nil { return "Import failed" }
         if imported != nil { return "Environment imported" }
@@ -408,7 +412,7 @@ struct ImportRootfsView: View {
     }
     private var alertMessage: String {
         if importer.phase == .failed, let failure = importer.failure { return failure }
-        if imported != nil { return "\\(name) was added. Select it in Distributions to start it at the next launch." }
+        if imported != nil { return "\(name) was added. Select it in Distributions to start it at the next launch." }
         return problem ?? ""
     }
     private var showingAlert: Bool { problem != nil || importer.phase == .failed && importer.failure != nil || imported != nil }
